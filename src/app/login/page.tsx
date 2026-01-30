@@ -14,34 +14,28 @@ export default function LoginPage() {
         setLoading(true);
         setError(null);
 
-        try {
-            if (isLogin) {
-                const res = await login(formData);
-                if (res?.error) setError(res.error);
-            } else {
-                const res = await signup(formData);
-                if (res?.error) setError(res.error);
-            }
-        } catch (e) {
-            setError('Ocurrió un error inesperado. Inténtalo de nuevo.');
-        } finally {
+        const res = await (isLogin ? login(formData) : signup(formData));
+
+        if (res?.error) {
+            setError(res.error);
             setLoading(false);
         }
+        // No setLoading(false) here if successful, the redirect will happen
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+            <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
 
                 {/* Header */}
                 <div className="text-center">
                     <div className="mx-auto h-12 w-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4">
                         <Wallet className="h-6 w-6" />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                         {isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
                     </h2>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                         {isLogin
                             ? 'Ingresa tus credenciales para acceder a tus finanzas.'
                             : 'Empieza a controlar tus gastos hoy mismo.'}
@@ -60,7 +54,7 @@ export default function LoginPage() {
                 <form action={handleSubmit} className="mt-8 space-y-6">
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Correo Electrónico
                             </label>
                             <div className="relative">
@@ -73,14 +67,14 @@ export default function LoginPage() {
                                     type="email"
                                     autoComplete="email"
                                     required
-                                    className="appearance-none block w-full pl-10 px-3 py-2.5 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow sm:text-sm"
+                                    className="appearance-none block w-full pl-10 px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm text-gray-900 dark:text-white dark:bg-gray-700"
                                     placeholder="tu@correo.com"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Contraseña
                             </label>
                             <div className="relative">
@@ -94,7 +88,7 @@ export default function LoginPage() {
                                     autoComplete="current-password"
                                     required
                                     minLength={6}
-                                    className="appearance-none block w-full pl-10 px-3 py-2.5 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow sm:text-sm"
+                                    className="appearance-none block w-full pl-10 px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm text-gray-900 dark:text-white dark:bg-gray-700"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -121,7 +115,7 @@ export default function LoginPage() {
 
                 {/* Toggle Login/Signup */}
                 <div className="text-center mt-4">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                         {isLogin ? '¿No tienes una cuenta?' : '¿Ya tienes una cuenta?'}
                         {' '}
                         <button
