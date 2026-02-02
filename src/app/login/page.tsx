@@ -28,13 +28,12 @@ export default function LoginPage() {
             <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
 
                 {/* Header */}
-                <div className="text-center">
-                    <div className="mx-auto h-12 w-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4">
-                        <Wallet className="h-6 w-6" />
+                <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
+                        <Wallet className="w-6 h-6 text-white" />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                        {isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
-                    </h2>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Seguimiento de Gastos</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-2">v2.9-PUBLIC</p>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                         {isLogin
                             ? 'Ingresa tus credenciales para acceder a tus finanzas.'
