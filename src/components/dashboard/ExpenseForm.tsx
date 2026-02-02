@@ -44,21 +44,63 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
 
     const isEditing = !!expense;
 
+    const compressImage = async (file: File): Promise<Blob | File> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        resolve(blob || file);
+                    }, 'image/jpeg', 0.8); // 80% quality for good OCR
+                };
+            };
+        });
+    };
+
     const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const originalFile = e.target.files?.[0];
+        if (!originalFile) return;
 
         // Show preview
-        const url = URL.createObjectURL(file);
+        const url = URL.createObjectURL(originalFile);
         setPreviewUrl(url);
 
         setScanning(true);
         setMessage(null);
 
-        const formData = new FormData();
-        formData.append('receipt', file);
-
         try {
+            // Compress image before sending to Vercel (avoids 4.5MB limit and timeouts)
+            const compressedBlob = await compressImage(originalFile);
+
+            const formData = new FormData();
+            formData.append('receipt', compressedBlob, 'receipt.jpg');
+
             const result = await scanReceipt(formData);
 
             if (result.error) {
@@ -77,8 +119,8 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
             setMessage({
                 type: 'error',
                 text: error?.message?.includes('payload too large')
-                    ? 'La imagen es muy pesada. Prueba con una foto de menor resolución.'
-                    : 'Error de conexión con el escáner (Vercel Timeout o Tamaño de imagen).'
+                    ? 'La imagen es muy pesada incluso después de comprimir.'
+                    : 'Error de conexión con el escáner (Vercel Timeout o Resolución excesiva).'
             });
         } finally {
             setScanning(false);
