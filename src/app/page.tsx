@@ -36,10 +36,14 @@ export default async function Home(props: { searchParams: Promise<{ startDate?: 
 
         {/* Header Section */}
         <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Seguimiento de Gastos</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Gestiona tus finanzas personales <span className="text-[10px] opacity-20">v2.8-push</span></p>
-          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Seguimiento de Gastos</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+            Gestiona tus finanzas personales
+            <span className="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-[10px] font-bold">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              v2.9-LIVE
+            </span>
+          </p>
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
 
