@@ -120,8 +120,8 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
             setMessage({
                 type: 'error',
                 text: errorMsg.includes('payload too large')
-                    ? 'La imagen es muy pesada. Intenta con otra foto.'
-                    : `Error de conexión: ${errorMsg || 'Tiempo de espera agotado'}. Prueba de nuevo.`
+                    ? '[FE-v2.5] La imagen es muy pesada. Intenta con otra foto.'
+                    : `[FE-v2.5] Error de conexión: ${errorMsg || 'Tiempo de espera agotado'}. Prueba de nuevo.`
             });
         } finally {
             setScanning(false);
@@ -200,6 +200,7 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                             )}
                             {scanning ? 'Analizando...' : 'Escanear Boleta'}
                         </button>
+                        <div className="text-[10px] text-gray-400 mt-1 text-right">v2.5</div>
                     </div>
                 </div>
             )}
