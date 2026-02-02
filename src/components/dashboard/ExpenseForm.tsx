@@ -120,8 +120,8 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
             setMessage({
                 type: 'error',
                 text: errorMsg.includes('payload too large')
-                    ? '[FE-v2.5] La imagen es muy pesada. Intenta con otra foto.'
-                    : `[FE-v2.5] Error de conexión: ${errorMsg || 'Tiempo de espera agotado'}. Prueba de nuevo.`
+                    ? '[FE-v2.6] La imagen es muy pesada. Intenta con otra foto.'
+                    : `[FE-v2.6] Error de conexión: ${errorMsg || 'Tiempo de espera agotado'}. Prueba de nuevo. (Check v2.6)`
             });
         } finally {
             setScanning(false);
@@ -200,10 +200,14 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                             )}
                             {scanning ? 'Analizando...' : 'Escanear Boleta'}
                         </button>
-                        <div className="text-[10px] text-gray-400 mt-1 text-right">v2.5</div>
                     </div>
                 </div>
             )}
+
+            {/* Banner de depuración v2.6 */}
+            <div className="mb-4 bg-red-600 text-white text-[10px] font-bold py-1 px-3 rounded uppercase text-center animate-pulse">
+                Version Debug: 2.6 - Si ves esto, la app se actualizó correctamente
+            </div>
 
             {/* Image Preview */}
             {previewUrl && (
