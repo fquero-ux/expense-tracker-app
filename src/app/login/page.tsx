@@ -32,8 +32,14 @@ export default function LoginPage() {
                     <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
                         <Wallet className="w-6 h-6 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Seguimiento de Gastos</h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2">v2.9-PUBLIC</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Seguimiento de Gastos</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                        Gestiona tus finanzas personales
+                        <span className="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-[10px] font-bold border border-green-200 dark:border-green-800">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
+                            v3.0-READY
+                        </span>
+                    </p>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                         {isLogin
                             ? 'Ingresa tus credenciales para acceder a tus finanzas.'
