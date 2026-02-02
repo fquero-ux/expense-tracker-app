@@ -1,38 +1,32 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const API_KEY = "AIzaSyAb898eruVmokdb_dY3cOudKgZEe4aIcco";
+const API_KEY = "AIzaSyD9f1gfOmPsqiuzutiDw5FKAcFAI3XiZDo";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 async function run() {
     const fs = require('fs');
-    fs.writeFileSync('logs.txt', 'Starting Test...\n');
-    const log = (msg) => {
-        console.log(msg);
-        fs.appendFileSync('logs.txt', msg + '\n');
-    };
+    let logs = "--- Starting Gemini API Access Test ---\n";
 
     const models = [
-        "gemini-2.0-flash",          // Original attempt
-        "gemini-2.0-flash-001",      // Specific version
-        "gemini-2.0-flash-lite-preview-02-05", // From search
-        "gemini-1.5-flash-8b",       // Alternative
-        "gemini-1.5-flash-002",      // Updated 1.5
-        "gemini-1.5-pro",            // Stable
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-2.0-flash-exp"
     ];
 
     for (const modelName of models) {
         try {
-            log(`Testing ${modelName}...`);
+            console.log(`Testing ${modelName}...`);
             const model = genAI.getGenerativeModel({ model: modelName });
-
-            // Just text generation to test model existence
-            const result = await model.generateContent("Hello");
+            const result = await model.generateContent("Test");
             const response = await result.response;
-            log(`✅ [${modelName}] SUCCESS. Response: ${response.text()}`);
+            logs += `✅ [${modelName}] SUCCESS: ${response.text().substring(0, 20)}...\n`;
         } catch (e) {
-            log(`❌ [${modelName}] FAILED: ${e.message.split('\n')[0]}`); // First line only
+            logs += `❌ [${modelName}] FAILED: ${e.message}\n`;
         }
     }
+
+    fs.writeFileSync('api-results.log', logs);
+    console.log("Results saved to api-results.log");
 }
 
-run();
+run().catch(console.error);
