@@ -38,7 +38,7 @@ export default async function Home(props: { searchParams: Promise<{ startDate?: 
         <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Seguimiento de Gastos</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Gestiona tus finanzas personales <span className="text-[10px] opacity-20">v2.7-sync</span></p>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Gestiona tus finanzas personales <span className="text-[10px] opacity-20">v2.8-push</span></p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

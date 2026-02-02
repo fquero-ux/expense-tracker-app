@@ -12,7 +12,7 @@ export async function scanReceipt(formData: FormData) {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-        return { error: '[v2.6] Clave de API de Gemini no configurada en el servidor.' };
+        return { error: '[v2.8] Clave de API de Gemini no configurada en el servidor.' };
     }
 
     try {
@@ -26,9 +26,9 @@ export async function scanReceipt(formData: FormData) {
         const base64 = buffer.toString('base64');
         console.log('Image converted to base64');
 
-        // Usamos 1.5-flash que es extremadamente estable y rápido para OCR
+        // Usamos la versión estable más reciente
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-1.5-flash-latest',
             generationConfig: {
                 responseMimeType: 'application/json',
             }
@@ -75,9 +75,9 @@ export async function scanReceipt(formData: FormData) {
     } catch (error: any) {
         console.error('Error scanning receipt:', error);
 
-        if (error.message?.includes('429')) return { error: '[v2.6] Cuota excedida. Reintenta en 1 min.' };
-        if (error.message?.includes('401')) return { error: '[v2.6] Error de autenticación con la IA.' };
+        if (error.message?.includes('429')) return { error: '[v2.8] Cuota excedida. Reintenta en 1 min.' };
+        if (error.message?.includes('401')) return { error: '[v2.8] Error de autenticación con la IA.' };
 
-        return { error: `[v2.6] Error del servidor: ${error.message || 'Error desconocido'}` };
+        return { error: `[v2.8] Error del servidor: ${error.message || 'Error desconocido'}` };
     }
 }
