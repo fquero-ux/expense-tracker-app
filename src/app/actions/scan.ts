@@ -30,15 +30,19 @@ export async function scanReceipt(formData: FormData) {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
         const prompt = `
-            Analiza esta imagen de una boleta o recibo.
+            Analiza esta imagen de una boleta, recibo o factura, especialmente de formatos chilenos (SII, RUT, etc.).
             Extrae la siguiente información en formato JSON estricto (sin markdown):
             {
-                "description": "Una descripción corta de qué es (ej: Almuerzo MacDonalds)",
-                "amount": 123.45 (solo el número),
-                "date": "YYYY-MM-DD" (la fecha de la boleta, si no hay usa la fecha de hoy),
-                "category": "Una de estas: Comida, Transporte, Oficina, Software, Servicios, Otros"
+                "description": "Una descripción corta y clara del gasto (ej: Compra en Líder, Almuerzo, Uber). Si es una boleta chilena, busca el nombre del comercio.",
+                "amount": 12345 (el monto TOTAL final pagado, como número entero o decimal),
+                "date": "YYYY-MM-DD" (la fecha de la boleta. Si no la encuentras o es ilegible, usa null),
+                "category": "Asigna una de estas categorías: Comida, Transporte, Oficina, Software, Servicios, Otros. Elige la que mejor se adapte al gasto."
             }
-            Si no puedes identificar algo, usa valores por defecto razonables o null.
+            Reglas importantes:
+            1. Si es una boleta de Chile, pon especial atención al "TOTAL" o "VALOR TOTAL".
+            2. La descripción debe ser amigable.
+            3. Si el monto tiene puntos como separadores de miles (formato chileno 1.000), asegúrate de devolverlo como número limpio (1000).
+            4. Devuelve SOLO el objeto JSON, nada más.
         `;
 
         console.log('Sending request to Gemini...');

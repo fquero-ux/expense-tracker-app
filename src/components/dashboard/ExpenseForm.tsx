@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { addExpense, updateExpense } from '@/app/actions/expenses';
 import { scanReceipt } from '@/app/actions/scan';
 import { Button } from '@/components/ui/Button';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, Loader2, X } from 'lucide-react';
 
 // Categorías definidas (se podrían mover a una constante global)
 const CATEGORIES = [
@@ -33,13 +33,24 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
     const [loading, setLoading] = useState(false);
     const [scanning, setScanning] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Form states
+    const [amount, setAmount] = useState(expense?.amount?.toString() || '');
+    const [description, setDescription] = useState(expense?.description || '');
+    const [date, setDate] = useState(expense?.date || new Date().toLocaleDateString('en-CA'));
+    const [category, setCategory] = useState(expense?.category || '');
 
     const isEditing = !!expense;
 
     const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Show preview
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
 
         setScanning(true);
         setMessage(null);
@@ -53,22 +64,13 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
             if (result.error) {
                 setMessage({ type: 'error', text: result.error });
             } else if (result.data) {
-                // Auto-fill form
-                const form = document.querySelector('form') as HTMLFormElement;
-                if (form) {
-                    const descInput = form.elements.namedItem('description') as HTMLInputElement;
-                    const amountInput = form.elements.namedItem('amount') as HTMLInputElement;
-                    const dateInput = form.elements.namedItem('date') as HTMLInputElement;
-                    const catSelect = form.elements.namedItem('category') as HTMLSelectElement;
+                // Update states
+                if (result.data.description) setDescription(result.data.description);
+                if (result.data.amount) setAmount(result.data.amount.toString());
+                if (result.data.date) setDate(result.data.date);
+                if (result.data.category) setCategory(result.data.category);
 
-                    if (descInput) descInput.value = result.data.description || '';
-                    if (amountInput) amountInput.value = result.data.amount || '';
-                    if (dateInput) dateInput.value = result.data.date || new Date().toISOString().split('T')[0];
-                    if (catSelect) {
-                        catSelect.value = result.data.category;
-                    }
-                    setMessage({ type: 'success', text: '¡Boleta analizada! Revisa los datos.' });
-                }
+                setMessage({ type: 'success', text: '¡Boleta analizada! Revisa los datos.' });
             }
         } catch (error) {
             setMessage({ type: 'error', text: 'Error de conexión con el escáner.' });
@@ -78,9 +80,12 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
         }
     };
 
-    async function handleSubmit(formData: FormData) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
         setLoading(true);
         setMessage(null);
+
+        const formData = new FormData(e.currentTarget);
 
         try {
             let result;
@@ -100,8 +105,11 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                 });
 
                 if (!isEditing) {
-                    const form = document.querySelector('form') as HTMLFormElement;
-                    form?.reset();
+                    setAmount('');
+                    setDescription('');
+                    setDate(new Date().toLocaleDateString('en-CA'));
+                    setCategory('');
+                    setPreviewUrl(null);
                 }
 
                 if (onSuccess) {
@@ -147,31 +155,64 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                 </div>
             )}
 
+            {/* Image Preview */}
+            {previewUrl && (
+                <div className="mb-6 relative group">
+                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Previsualización de Boleta:</div>
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                        <img
+                            src={previewUrl}
+                            alt="Scan preview"
+                            className="h-full w-full object-contain"
+                        />
+                        {scanning && (
+                            <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-center justify-center">
+                                <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                                    <span className="text-sm font-medium">Extrayendo datos...</span>
+                                </div>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setPreviewUrl(null)}
+                            className="absolute top-2 right-2 p-1.5 bg-gray-900/50 hover:bg-gray-900/70 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                            <span className="sr-only">Cerrar</span>
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {message && (
-                <div className={`p-3 mb-4 text-sm rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                <div className={`mb-6 p-4 rounded-lg text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 ${message.type === 'success'
+                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/30'
+                    : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/30'
                     }`}>
+                    <div className={`w-2 h-2 rounded-full ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`} />
                     {message.text}
                 </div>
             )}
 
-            <form action={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Monto (Primero) */}
+                    {/* Monto */}
                     <div>
                         <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Monto
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400">$</span>
+                            <span className="absolute left-3 top-2.5 text-gray-500 dark:text-gray-400">$</span>
                             <input
                                 type="text"
                                 inputMode="numeric"
                                 name="amount"
                                 id="amount"
                                 required
-                                defaultValue={expense?.amount}
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
                                 placeholder="0"
-                                className="w-full pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
+                                className="w-full pl-7 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 transition-all"
                             />
                         </div>
                     </div>
@@ -186,9 +227,10 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                             name="description"
                             id="description"
                             required
-                            defaultValue={expense?.description}
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
                             placeholder="Ej: Almuerzo de trabajo"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
+                            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 transition-all"
                         />
                     </div>
                 </div>
@@ -204,8 +246,9 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                             name="date"
                             id="date"
                             required
-                            defaultValue={expense?.date || new Date().toLocaleDateString('en-CA')}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 transition-all"
                         />
                     </div>
 
@@ -219,9 +262,10 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                             name="category"
                             id="category"
                             required
-                            defaultValue={expense?.category}
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
                             placeholder="Escribe o selecciona..."
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white bg-white dark:bg-gray-700"
+                            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white bg-white dark:bg-gray-700 transition-all"
                         />
                         <datalist id="categories-list">
                             {CATEGORIES.map(cat => (
@@ -232,8 +276,15 @@ export const ExpenseForm = ({ expense, onSuccess }: ExpenseFormProps) => {
                 </div>
 
                 <div className="pt-2">
-                    <Button type="submit" disabled={loading} className="w-full">
-                        {loading ? 'Guardando...' : (isEditing ? 'Actualizar Gasto' : 'Guardar Gasto')}
+                    <Button type="submit" disabled={loading} className="w-full py-3">
+                        {loading ? (
+                            <div className="flex items-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>{isEditing ? 'Actualizando...' : 'Guardando...'}</span>
+                            </div>
+                        ) : (
+                            isEditing ? 'Actualizar Gasto' : 'Guardar Gasto'
+                        )}
                     </Button>
                 </div>
             </form>
