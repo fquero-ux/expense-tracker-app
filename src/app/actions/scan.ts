@@ -1,8 +1,10 @@
 'use server';
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+});
 
 export async function scanReceipt(formData: FormData) {
     const file = formData.get('receipt') as File;
@@ -11,61 +13,73 @@ export async function scanReceipt(formData: FormData) {
         return { error: 'No se subió ninguna imagen.' };
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-        return { error: '[v4.0] Clave de API de Gemini no configurada en el servidor.' };
+    if (!process.env.ANTHROPIC_API_KEY) {
+        return { error: '[v4.1-Claude] Clave de API de Anthropic no configurada en el servidor.' };
     }
 
     try {
-        console.log('Server Action: scanReceipt called');
-        console.log(`File: ${file.name}, Size: ${file.size}, Type: ${file.type}`);
-        console.log(`API Key configured: ${!!process.env.GEMINI_API_KEY}`);
+        console.log('Server Action: scanReceipt (Claude) called');
 
         // Convertir File a Base64
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const base64 = buffer.toString('base64');
-        console.log('Image converted to base64');
-
-        // v4.0: Usamos el ID más reciente y robusto
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash-latest',
-            generationConfig: {
-                responseMimeType: 'application/json',
-            }
-        });
+        const mediaType = 'image/jpeg';
 
         const prompt = `
             Eres un experto en extracción de datos de boletas chilenas (SII, facturas).
-            Extrae estos datos en JSON:
+            Lee la imagen adjunta y extrae estos datos en formato JSON puro, sin texto adicional:
             {
                 "description": "Nombre del comercio o glosa corta",
-                "amount": total pagado como número,
+                "amount": total pagado como número entero,
                 "date": "YYYY-MM-DD",
                 "category": "Comida|Transporte|Oficina|Software|Servicios|Otros"
             }
             Importante: 
-            - Si es chilena, el monto es el TOTAL. 
-            - Si no hay fecha usa null.
-            - Responde SOLO con el JSON.
+            - Si es una boleta chilena, el monto es el TOTAL final. 
+            - Si no encuentras la fecha, usa null.
+            - Responde únicamente con el objeto JSON.
         `;
 
-        console.log('Sending request to Gemini 1.5 Flash...');
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: base64,
-                    mimeType: 'image/jpeg' // Forzamos jpeg ya que comprimimos a eso
-                }
-            }
-        ]);
+        const message = await anthropic.messages.create({
+            model: 'claude-3-5-sonnet-latest',
+            max_tokens: 1024,
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'image',
+                            source: {
+                                type: 'base64',
+                                media_type: mediaType,
+                                data: base64,
+                            },
+                        },
+                        {
+                            type: 'text',
+                            text: prompt,
+                        },
+                    ],
+                },
+            ],
+        });
 
-        const response = await result.response;
-        const text = response.text();
-        console.log(`Raw text: ${text}`);
+        // Extraer el texto de la respuesta
+        const content = message.content[0];
+        if (content.type !== 'text') {
+            throw new Error('La respuesta de la IA no es texto.');
+        }
+
+        const text = content.text;
+        console.log(`Claude Raw text: ${text}`);
 
         try {
-            const data = JSON.parse(text);
+            // Limpiar posible markdown si Claude lo incluye
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            const jsonText = jsonMatch ? jsonMatch[0] : text;
+            const data = JSON.parse(jsonText);
+
             return { success: true, data };
         } catch (parseError) {
             console.error('Parse error:', text);
@@ -73,11 +87,11 @@ export async function scanReceipt(formData: FormData) {
         }
 
     } catch (error: any) {
-        console.error('Error scanning receipt:', error);
+        console.error('Error scanning receipt (Claude):', error);
 
-        if (error.message?.includes('429')) return { error: '[v4.0] Cuota excedida. Reintenta en 1 min.' };
-        if (error.message?.includes('401')) return { error: '[v4.0] Error de autenticación con la IA.' };
+        if (error.status === 401) return { error: '[v4.1] Error de autenticación con Anthropic (Key inválida).' };
+        if (error.status === 429) return { error: '[v4.1] Cuota excedida en Claude. Reintenta pronto.' };
 
-        return { error: `[v4.0] Error del servidor: ${error.message || 'Error desconocido'}` };
+        return { error: `[v4.1-Claude] Error del servidor: ${error.message || 'Error desconocido'}` };
     }
 }

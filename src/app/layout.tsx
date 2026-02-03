@@ -40,8 +40,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* Global Sync Verification Banner */}
-        <div className="bg-purple-600 text-white text-[10px] py-1 text-center font-bold sticky top-0 z-50">
-          DEPLOYMENT VERIFICATION: v4.0-STABLE | API: GEMINI-1.5-FLASH-LATEST
+        <div className="bg-orange-600 text-white text-[10px] py-1 text-center font-bold sticky top-0 z-50">
+          DEPLOYMENT VERIFICATION: v4.1-CLAUDE | API: ANTHROPIC-SONNET-3.5
         </div>
         {children}
       </body>
